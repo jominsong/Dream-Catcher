@@ -3,8 +3,8 @@ using static UnityEditor.Searcher.SearcherWindow.Alignment;
 
 public class PlayerMove : MonoBehaviour
 {
-    public float maxSpeed;
-    public float JumpPower;
+    private float maxSpeed;
+    private float JumpPower;
     Rigidbody2D rigid;
     SpriteRenderer spriteRenderer;
     Animator animator;

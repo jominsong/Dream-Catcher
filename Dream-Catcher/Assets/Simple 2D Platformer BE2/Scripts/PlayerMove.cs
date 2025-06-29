@@ -3,8 +3,9 @@ using static UnityEditor.Searcher.SearcherWindow.Alignment;
 
 public class PlayerMove : MonoBehaviour
 {
-    private float maxSpeed;
-    private float JumpPower;
+    public GameManager GameManager;
+    private float maxSpeed = 5;
+    private float JumpPower = 7;
     Rigidbody2D rigid;
     SpriteRenderer spriteRenderer;
     Animator animator;
@@ -70,14 +71,32 @@ public class PlayerMove : MonoBehaviour
         if (collision.gameObject.tag == "Item")
         {
             //point
-
+            bool isBronze = collision.gameObject.name.Contains("Bronze");
+            bool isSilver = collision.gameObject.name.Contains("Silver");
+            bool isGold = collision.gameObject.name.Contains("Gold");
+            if (isBronze)
+                GameManager.stagePoint += 100;
+            else if (isSilver)
+                GameManager.stagePoint += 500;
+            else if (isGold)
+                GameManager.stagePoint += 1000;
             //Deactive Item
             collision.gameObject.SetActive(false);
         }
         else if (collision.gameObject.tag == "Finish")
         {
             //Next stage
-
+            GameManager.NextStage();
         }
     }
+    public void OnDie()
+    {
+
+    }
+
+    public void VelocityZero()
+    {
+        rigid.linearVelocity = Vector2.zero;
+    }
+
 }

@@ -1,3 +1,4 @@
+using Unity.VisualScripting;
 using UnityEngine;
 using static UnityEditor.Searcher.SearcherWindow.Alignment;
 
@@ -5,10 +6,12 @@ public class PlayerMove : MonoBehaviour
 {
     public GameManager GameManager;
     private float maxSpeed = 5;
-    private float JumpPower = 7;
+    private float JumpPower = 10;
     Rigidbody2D rigid;
     SpriteRenderer spriteRenderer;
     Animator animator;
+
+
     void Awake()
     {
         rigid = GetComponent<Rigidbody2D>();
@@ -45,7 +48,7 @@ public class PlayerMove : MonoBehaviour
     {
         //move speed
         float h = Input.GetAxisRaw("Horizontal");
-        rigid.AddForce(Vector2.right * h, ForceMode2D.Impulse);
+        rigid.linearVelocity = new Vector2(h * maxSpeed, rigid.linearVelocity.y);
 
         if (rigid.linearVelocity.x > maxSpeed)
             rigid.linearVelocity = new Vector2(maxSpeed, rigid.linearVelocity.y);
@@ -55,16 +58,51 @@ public class PlayerMove : MonoBehaviour
         //Landing Platform
         if (rigid.linearVelocity.y < 0)
         {
-            Debug.DrawRay(rigid.position, Vector3.down, Color.yellow);
+            Debug.DrawRay(rigid.position + Vector2.down * 0.5f, Vector2.down * 1.2f, Color.yellow); // 시각 디버깅용
 
-            RaycastHit2D rayHit = Physics2D.Raycast(rigid.position, Vector3.down, 1, LayerMask.GetMask("Platform"));
+            RaycastHit2D rayHit = Physics2D.Raycast(rigid.position + Vector2.down * 0.5f, Vector2.down, 1.2f, LayerMask.GetMask("Platform", "Speed", "Jump"));
+
+            if (rayHit.collider != null && rayHit.distance < 0.6f)
+                animator.SetBool("is jumping", false);
+        }
+
+
+        // Super Jump/Speed
+        if (rigid.linearVelocity.y < 0)
+        {
+
+            RaycastHit2D rayHit = Physics2D.Raycast(rigid.position, Vector3.down, 1, LayerMask.GetMask("Speed"));
 
             if (rayHit.collider != null)
             {
-                if (rayHit.distance < 0.5f)
-                    animator.SetBool("is jumping", false);
+                if (rayHit.distance < 0.6f)
+                    maxSpeed = 12;
             }
         }
+        RaycastHit2D SpeedHit = Physics2D.Raycast(rigid.position, Vector2.down, 1f, LayerMask.GetMask("Platform","Jump"));
+        if (SpeedHit.collider != null && SpeedHit.distance < 0.6f)
+        {
+            maxSpeed = 5;
+        }
+
+
+        if (rigid.linearVelocity.y < 0)
+        {
+
+            RaycastHit2D rayHit = Physics2D.Raycast(rigid.position, Vector3.down, 1, LayerMask.GetMask("Jump"));
+
+            if (rayHit.collider != null)
+            {
+                if (rayHit.distance < 0.6f)
+                    JumpPower = 20;
+            }
+        }
+        RaycastHit2D JumpHit = Physics2D.Raycast(rigid.position, Vector2.down, 1f, LayerMask.GetMask("Platform", "Speed"));
+        if (JumpHit.collider != null && JumpHit.distance < 0.6f)
+        {
+            JumpPower = 10;
+        }
+
     }
     private void OnTriggerEnter2D(Collider2D collision)
     {
@@ -98,5 +136,7 @@ public class PlayerMove : MonoBehaviour
     {
         rigid.linearVelocity = Vector2.zero;
     }
+    
+
 
 }

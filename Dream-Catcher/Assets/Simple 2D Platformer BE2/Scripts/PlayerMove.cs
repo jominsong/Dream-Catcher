@@ -1,12 +1,29 @@
 using Unity.VisualScripting;
 using UnityEngine;
+using System;
+using JetBrains.Annotations;
 using static UnityEditor.Searcher.SearcherWindow.Alignment;
 
 public class PlayerMove : MonoBehaviour
 {
     public GameManager GameManager;
     private float maxSpeed = 5;
+    //Jump
     private float JumpPower = 10;
+    public float wallJumpPower;
+    public float antiGravity;
+    public int jumpCount;
+    public int maxJumpCount;
+    public float afterWallJumpStiff;
+    //Dash
+    public float currentTime;
+    public float lastTapTime;
+    public float doubleTapTimeLimit;
+    public bool firstTapDetected;
+    public float dashCount;
+    public float dashTime;
+    public float dashCoolDown;
+
     Rigidbody2D rigid;
     SpriteRenderer spriteRenderer;
     Animator animator;
@@ -20,11 +37,31 @@ public class PlayerMove : MonoBehaviour
     }
     void Update()
     {
+        float h = Input.GetAxisRaw("Horizontal");
+        Debug.DrawRay(rigid.position, Vector3.right, new Color(0, 1, 0));
+        Debug.DrawRay(rigid.position, Vector3.left, new Color(0, 1, 0));
+        RaycastHit2D rayDown = Physics2D.Raycast(rigid.position, Vector3.down, 1f, LayerMask.GetMask("Platform"));
+        RaycastHit2D rayRight = Physics2D.Raycast(rigid.position, Vector3.right, 1f, LayerMask.GetMask("Platform"));
+        RaycastHit2D rayLeft = Physics2D.Raycast(rigid.position, Vector3.left, 1f, LayerMask.GetMask("Platform"));
         //jump
-        if (Input.GetButtonDown("Jump") && !animator.GetBool("is jumping"))
+        if (Input.GetButtonDown("Jump") && jumpCount < maxJumpCount)
         {
+            rigid.linearVelocityY = 0;
             rigid.AddForce(Vector2.up * JumpPower, ForceMode2D.Impulse);
             animator.SetBool("is jumping", true);
+            jumpCount++;
+
+            // º® Á¡ÇÁ °¨Áö
+            if (rayLeft.collider != null)
+            {
+                rigid.AddForce(Vector2.right * wallJumpPower, ForceMode2D.Impulse);
+                afterWallJumpStiff = 10;
+            }
+            else if (rayRight.collider != null)
+            {
+                rigid.AddForce(Vector2.left * wallJumpPower, ForceMode2D.Impulse);
+                afterWallJumpStiff = 10;
+            }
         }
 
         //stop speed
@@ -43,39 +80,104 @@ public class PlayerMove : MonoBehaviour
         else
             animator.SetBool("is walking", true);
         animator.speed = maxSpeed / 7f;
-    }
-    void FixedUpdate()
-    {
-        //move speed
-        float h = Input.GetAxisRaw("Horizontal");
-        rigid.linearVelocity = new Vector2(h * maxSpeed, rigid.linearVelocity.y);
 
-        if (rigid.linearVelocity.x > maxSpeed)
-            rigid.linearVelocity = new Vector2(maxSpeed, rigid.linearVelocity.y);
-        else if (rigid.linearVelocity.x < -maxSpeed)
-            rigid.linearVelocity = new Vector2(-maxSpeed, rigid.linearVelocity.y);
-
-        //Landing Platform
-        if (rigid.linearVelocity.y < 0)
+        //Dash
+        currentTime = Time.time;
+        if (Input.GetButtonDown("Horizontal"))
         {
-            Debug.DrawRay(rigid.position + Vector2.down * 0.5f, Vector2.down * 1.2f, Color.yellow); // ½Ã°¢ µð¹ö±ë¿ë
-
-            RaycastHit2D rayHit = Physics2D.Raycast(rigid.position + Vector2.down * 0.5f, Vector2.down, 1.2f, LayerMask.GetMask("Platform", "Speed", "Jump"));
-
-            if (rayHit.collider != null && rayHit.distance < 0.6f)
-                animator.SetBool("is jumping", false);
+            if (currentTime - lastTapTime <= doubleTapTimeLimit && firstTapDetected)
+            {
+                firstTapDetected = false;
+                if (dashCount < 1 && dashCoolDown == 0)
+                {
+                    animator.SetBool("is sliding", true);
+                    if (rayDown.collider == null)
+                    {     
+                        
+                        rigid.linearVelocity = new Vector2(h * 10, 5);
+                    }
+                    else
+                        rigid.linearVelocityX = h * 10;
+                    dashCount++;
+                    dashTime = 20;
+                    dashCoolDown = 30;
+                }
+            }
+            else
+            {
+                firstTapDetected = true;
+                lastTapTime = currentTime;
+            }
+        }
+        if (currentTime - lastTapTime > doubleTapTimeLimit)
+        {
+            lastTapTime = -1f;
+            firstTapDetected = false;
         }
 
+    }
+
+    void FixedUpdate()
+    {
+        Debug.DrawRay(rigid.position, Vector3.down, new Color(0, 1, 0)); // ½Ã°¢ µð¹ö±ë¿ë
+
+        RaycastHit2D rayHit = Physics2D.Raycast(rigid.position, Vector2.down, 0.7f, LayerMask.GetMask("Platform", "Speed", "Jump"));
+        RaycastHit2D rayRight = Physics2D.Raycast(rigid.position, Vector2.right, 1f, LayerMask.GetMask("Platform", "Speed", "Jump"));
+        RaycastHit2D rayLeft = Physics2D.Raycast(rigid.position, Vector2.left, 1f, LayerMask.GetMask("Platform", "Speed", "Jump"));
+
+
+        //move speed
+        float h = Input.GetAxisRaw("Horizontal");
+        
+
+        if (dashTime == 0)
+        {
+            animator.SetBool("is sliding", false);
+            if (rigid.linearVelocity.x > maxSpeed)
+                rigid.linearVelocity = new Vector2(maxSpeed, rigid.linearVelocityY);
+            else if (rigid.linearVelocity.x < maxSpeed * (-1))
+                rigid.linearVelocity = new Vector2(maxSpeed * (-1), rigid.linearVelocityY);
+        }
+
+        //ÇÃ·¿Æû °¨Áö
+        if (rigid.linearVelocity.y < 0)
+        {
+
+
+            if (rayHit.collider != null || rayRight.collider != null || rayLeft.collider != null)
+            {
+                animator.SetBool("is jumping", false);
+                jumpCount = 0;
+                dashCount = 0;
+                Debug.Log("ÃÊ±âÈ­µÊ");
+            }
+
+        }
+        if (afterWallJumpStiff == 0 && dashTime == 0)
+        {
+            if (rayRight.collider == null && rayLeft.collider == null)
+                rigid.AddForce(Vector2.right * h, ForceMode2D.Impulse);
+            else
+            {
+                
+                if (rigid.linearVelocityY < 0)
+                    rigid.AddForce(Vector2.up * antiGravity, ForceMode2D.Impulse);
+                if (rayRight.collider != null && Input.GetKey(KeyCode.LeftArrow))
+                    rigid.AddForce(Vector2.left, ForceMode2D.Impulse);
+                if (rayLeft.collider != null && Input.GetKey(KeyCode.RightArrow))
+                    rigid.AddForce(Vector2.right, ForceMode2D.Impulse);
+            }
+        }
 
         // Super Jump/Speed
         if (rigid.linearVelocity.y < 0)
         {
 
-            RaycastHit2D rayHit = Physics2D.Raycast(rigid.position, Vector3.down, 1, LayerMask.GetMask("Speed"));
+            RaycastHit2D raySpeed = Physics2D.Raycast(rigid.position, Vector3.down, 1, LayerMask.GetMask("Speed"));
 
-            if (rayHit.collider != null)
+            if (raySpeed.collider != null)
             {
-                if (rayHit.distance < 0.6f)
+                if (raySpeed.distance < 0.6f)
                     maxSpeed = 12;
             }
         }
@@ -89,11 +191,11 @@ public class PlayerMove : MonoBehaviour
         if (rigid.linearVelocity.y < 0)
         {
 
-            RaycastHit2D rayHit = Physics2D.Raycast(rigid.position, Vector3.down, 1, LayerMask.GetMask("Jump"));
+            RaycastHit2D rayJump = Physics2D.Raycast(rigid.position, Vector3.down, 1, LayerMask.GetMask("Jump"));
 
-            if (rayHit.collider != null)
+            if (rayJump.collider != null)
             {
-                if (rayHit.distance < 0.6f)
+                if (rayJump.distance < 0.6f)
                     JumpPower = 20;
             }
         }
@@ -103,6 +205,15 @@ public class PlayerMove : MonoBehaviour
             JumpPower = 10;
         }
 
+        //speedlimit
+
+        
+        if (dashTime > 0)
+            dashTime--;
+        if (dashCoolDown > 0)
+            dashCoolDown--;
+        if (afterWallJumpStiff > 0)
+            afterWallJumpStiff--;
     }
     private void OnTriggerEnter2D(Collider2D collision)
     {

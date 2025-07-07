@@ -41,8 +41,8 @@ public class PlayerMove : MonoBehaviour
         Debug.DrawRay(rigid.position, Vector3.right, new Color(0, 1, 0));
         Debug.DrawRay(rigid.position, Vector3.left, new Color(0, 1, 0));
         RaycastHit2D rayDown = Physics2D.Raycast(rigid.position, Vector3.down, 0.5f, LayerMask.GetMask("Platform"));
-        RaycastHit2D rayRight = Physics2D.Raycast(rigid.position, Vector3.right, 0.25f, LayerMask.GetMask("Platform"));
-        RaycastHit2D rayLeft = Physics2D.Raycast(rigid.position, Vector3.left, 0.25f, LayerMask.GetMask("Platform"));
+        RaycastHit2D rayRight = Physics2D.Raycast(rigid.position, Vector3.right, 0.5f, LayerMask.GetMask("Platform"));
+        RaycastHit2D rayLeft = Physics2D.Raycast(rigid.position, Vector3.left, 0.5f, LayerMask.GetMask("Platform"));
         //jump
         if (Input.GetButtonDown("Jump") && jumpCount < maxJumpCount)
         {
@@ -54,11 +54,15 @@ public class PlayerMove : MonoBehaviour
             // º® Á¡ÇÁ °¨Áö
             if (rayLeft.collider != null)
             {
+                animator.SetBool("is wallkick", true);
+                animator.SetBool("is jumping", false);
                 rigid.AddForce(Vector2.right * wallJumpPower, ForceMode2D.Impulse);
                 afterWallJumpStiff = 10;
             }
             else if (rayRight.collider != null)
             {
+                animator.SetBool("is wallkick", true);
+                animator.SetBool("is jumping", false);
                 rigid.AddForce(Vector2.left * wallJumpPower, ForceMode2D.Impulse);
                 afterWallJumpStiff = 10;
             }
@@ -91,10 +95,10 @@ public class PlayerMove : MonoBehaviour
                 if (dashCount < 1 && dashCoolDown == 0)
                 {
                     animator.SetBool("is sliding", true);
-                    animator.SetBool("is diving",true);
+                    
                     if (rayDown.collider == null)
-                    {     
-                        
+                    {
+                        animator.SetBool("is diving", true);
                         rigid.linearVelocity = new Vector2(h * 10, 5);
                     }
                     else
@@ -122,7 +126,7 @@ public class PlayerMove : MonoBehaviour
     {
         Debug.DrawRay(rigid.position, Vector3.down, new Color(0, 1, 0)); // ½Ã°¢ µð¹ö±ë¿ë
 
-        RaycastHit2D rayHit = Physics2D.Raycast(rigid.position, Vector2.down, 0.7f, LayerMask.GetMask("Platform", "Speed", "Jump"));
+        RaycastHit2D rayHit = Physics2D.Raycast(rigid.position, Vector2.down, 1f, LayerMask.GetMask("Platform", "Speed", "Jump"));
         RaycastHit2D rayRight = Physics2D.Raycast(rigid.position, Vector2.right, 0.5f, LayerMask.GetMask("Platform", "Speed", "Jump"));
         RaycastHit2D rayLeft = Physics2D.Raycast(rigid.position, Vector2.left, 0.5f, LayerMask.GetMask("Platform", "Speed", "Jump"));
 
@@ -144,13 +148,15 @@ public class PlayerMove : MonoBehaviour
         //ÇÃ·¿Æû °¨Áö
         if (rigid.linearVelocity.y < 0)
         {
-            if (rayHit.collider != null )
+            if (rayHit.collider != null)
             {
+                animator.SetBool("is wallkick", false);
                 animator.SetBool("is jumping", false);
+                        
+                
             }
             if (rayHit.collider != null || rayRight.collider != null || rayLeft.collider != null)
             {
-                
                 jumpCount = 0;
                 dashCount = 0;
                 Debug.Log("ÃÊ±âÈ­µÊ");
@@ -160,7 +166,10 @@ public class PlayerMove : MonoBehaviour
         if (afterWallJumpStiff == 0 && dashTime == 0)
         {
             if (rayRight.collider == null && rayLeft.collider == null)
+            {
                 rigid.AddForce(Vector2.right * h, ForceMode2D.Impulse);
+                animator.SetBool("is climbing", false);
+            }
             else
             {
                 animator.SetBool("is climbing", true);

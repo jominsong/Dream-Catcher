@@ -49,6 +49,7 @@ public class PlayerMove : MonoBehaviour
             rigid.linearVelocityY = 0;
             rigid.AddForce(Vector2.up * JumpPower, ForceMode2D.Impulse);
             animator.SetBool("is jumping", true);
+            animator.SetBool("is diving", false);
             jumpCount++;
 
             // 벽 점프 감지
@@ -74,9 +75,12 @@ public class PlayerMove : MonoBehaviour
             rigid.linearVelocity = new Vector2(rigid.linearVelocity.normalized.x * 1.5f, rigid.linearVelocity.y);
         }
 
-        //direction sprite
-        if (Input.GetButton("Horizontal"))
-            spriteRenderer.flipX = Input.GetAxisRaw("Horizontal") == -1;
+        // 방향 반전: 실제 이동 방향 기준
+        if (Mathf.Abs(rigid.linearVelocity.x) > 0.01f)
+        {
+            spriteRenderer.flipX = rigid.linearVelocity.x < 0;
+        }
+
 
         //walk animation
         if (Mathf.Abs(rigid.linearVelocity.x) < 0.7)
@@ -99,10 +103,10 @@ public class PlayerMove : MonoBehaviour
                     if (rayDown.collider == null)
                     {
                         animator.SetBool("is diving", true);
-                        rigid.linearVelocity = new Vector2(h * 10, 5);
+                        rigid.linearVelocity = new Vector2(h * 12, 5);
                     }
                     else
-                        rigid.linearVelocityX = h * 10;
+                        rigid.linearVelocityX = h * 12;
                     dashCount++;
                     dashTime = 20;
                     dashCoolDown = 30;
@@ -138,7 +142,6 @@ public class PlayerMove : MonoBehaviour
         if (dashTime == 0)
         {
             animator.SetBool("is sliding", false);
-            animator.SetBool("is diving", false);
             if (rigid.linearVelocity.x > maxSpeed)
                 rigid.linearVelocity = new Vector2(maxSpeed, rigid.linearVelocityY);
             else if (rigid.linearVelocity.x < maxSpeed * (-1))
@@ -152,11 +155,13 @@ public class PlayerMove : MonoBehaviour
             {
                 animator.SetBool("is wallkick", false);
                 animator.SetBool("is jumping", false);
-                        
-                
+
+
             }
             if (rayHit.collider != null || rayRight.collider != null || rayLeft.collider != null)
             {
+                animator.SetBool("is diving", false);
+                animator.SetBool("is wallkick", false);
                 jumpCount = 0;
                 dashCount = 0;
                 Debug.Log("초기화됨");

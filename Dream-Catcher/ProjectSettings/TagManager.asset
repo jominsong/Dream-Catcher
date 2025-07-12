@@ -5,15 +5,16 @@ TagManager:
   serializedVersion: 3
   tags:
   - Item
+  - Ring
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Platform
   - Water
   - UI
-  - Platform
-  - 
+  - Speed
+  - Jump
   - 
   - 
   - 

@@ -27,6 +27,7 @@ public class PlayerMove : MonoBehaviour
     Rigidbody2D rigid;
     SpriteRenderer spriteRenderer;
     Animator animator;
+    GrapplingHook grappling;
 
 
     void Awake()
@@ -34,6 +35,7 @@ public class PlayerMove : MonoBehaviour
         rigid = GetComponent<Rigidbody2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         animator = GetComponent<Animator>();
+        grappling = GetComponent<GrapplingHook>();
     }
     void Update()
     {
@@ -137,7 +139,13 @@ public class PlayerMove : MonoBehaviour
 
         //move speed
         float h = Input.GetAxisRaw("Horizontal");
-        
+        if (grappling.isAttach)
+        {
+            rigid.AddForce(Vector2.right * h * 10, ForceMode2D.Force);
+        }
+
+
+
 
         if (dashTime == 0)
         {
@@ -223,7 +231,6 @@ public class PlayerMove : MonoBehaviour
             JumpPower = 10;
         }
 
-        //speedlimit
 
         
         if (dashTime > 0)

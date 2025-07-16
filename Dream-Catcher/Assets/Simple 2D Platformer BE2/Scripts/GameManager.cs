@@ -5,6 +5,7 @@ public class GameManager : MonoBehaviour
     public int totalPoint;
     public int stagePoint;
     public int stageIndex;
+    public int dreamPoint;
     public int health;
     public PlayerMove player;
     public GameObject[] Stages;
@@ -32,6 +33,7 @@ public class GameManager : MonoBehaviour
         //Calculate Point
         totalPoint += stagePoint;
         stagePoint = 0;
+        dreamPoint = 0;
     }
     public void HealthDown()
     {

@@ -3,6 +3,7 @@ using UnityEngine;
 using System;
 using JetBrains.Annotations;
 using static UnityEditor.Searcher.SearcherWindow.Alignment;
+using Unity.XR.GoogleVr;
 
 public class PlayerMove : MonoBehaviour
 {
@@ -130,6 +131,19 @@ public class PlayerMove : MonoBehaviour
 
     void FixedUpdate()
     {
+
+        //  Grappling 상태에 따라 속도 변경
+        if (grappling.isAttach)
+            {
+                maxSpeed = 7f; // 줄에 매달렸을 때 속도 증가 (원하는 값으로 조정 가능)
+                rigid.AddForce(Vector2.right * Input.GetAxisRaw("Horizontal") * 10, ForceMode2D.Force);
+            }
+            else
+            {
+                maxSpeed = 5f; // 기본 속도
+            }
+
+
         Debug.DrawRay(rigid.position, Vector3.down, new Color(0, 1, 0)); // 시각 디버깅용
 
         RaycastHit2D rayHit = Physics2D.Raycast(rigid.position, Vector2.down, 1f, LayerMask.GetMask("Platform", "Speed", "Jump"));
@@ -161,6 +175,7 @@ public class PlayerMove : MonoBehaviour
         {
             if (rayHit.collider != null)
             {
+                animator.SetBool("is diving", false);
                 animator.SetBool("is wallkick", false);
                 animator.SetBool("is jumping", false);
 
@@ -261,6 +276,14 @@ public class PlayerMove : MonoBehaviour
         {
             //Next stage
             GameManager.NextStage();
+        }
+        else if (collision.gameObject.tag == "Fragment")
+        {
+            //Deactive Item
+            collision.gameObject.SetActive(false);
+            GameManager.dreamPoint += 1;
+            if (GameManager.dreamPoint == 5)
+                GameManager.NextStage(); 
         }
     }
     public void OnDie()

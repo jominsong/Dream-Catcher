@@ -5,6 +5,7 @@ public class Hooking : MonoBehaviour
     GrapplingHook grappling;
     public SpringJoint2D springJoint;
     private Rigidbody2D playerRb;
+    
 
     void Start()
     {
@@ -28,6 +29,7 @@ public class Hooking : MonoBehaviour
             springJoint.dampingRatio = 0.7f;
             springJoint.frequency = 2.0f;
             springJoint.enabled = true;
+            
 
             // Grappling 상태 설정
             grappling.isAttach = true;

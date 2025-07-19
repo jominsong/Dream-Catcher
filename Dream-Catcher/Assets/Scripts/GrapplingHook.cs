@@ -42,7 +42,7 @@ public class GrapplingHook : MonoBehaviour
 
         if (isHookActivate && !isLineMax && !isAttach)
         {
-            hook.Translate(hookDir * Time.deltaTime * 15);
+            hook.Translate(hookDir * Time.deltaTime * 30);
 
             if (Vector2.Distance(transform.position, hook.position) > 5)
             {
@@ -51,7 +51,7 @@ public class GrapplingHook : MonoBehaviour
         }
         else if (isHookActivate && isLineMax && !isAttach)
         {
-            hook.position = Vector2.MoveTowards(hook.position, transform.position, Time.deltaTime * 20);
+            hook.position = Vector2.MoveTowards(hook.position, transform.position, Time.deltaTime * 30);
             if (Vector2.Distance(transform.position, hook.position) < 0.1f)
             {
                 isHookActivate = false;

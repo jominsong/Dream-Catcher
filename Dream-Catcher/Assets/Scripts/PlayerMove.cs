@@ -12,6 +12,7 @@ public class PlayerMove : MonoBehaviour
     //Jump
     private float JumpPower = 10;
     public float wallJumpPower;
+    private int wallIsRight;
     public float antiGravity;
     public int jumpCount;
     public int maxJumpCount;
@@ -60,16 +61,27 @@ public class PlayerMove : MonoBehaviour
             {
                 animator.SetBool("is wallkick", true);
                 animator.SetBool("is jumping", false);
-                rigid.AddForce(Vector2.right * wallJumpPower, ForceMode2D.Impulse);
-                afterWallJumpStiff = 10;
+                wallIsRight = -1;
+                afterWallJumpStiff = 20;
             }
             else if (rayRight.collider != null)
             {
                 animator.SetBool("is wallkick", true);
                 animator.SetBool("is jumping", false);
                 rigid.AddForce(Vector2.left * wallJumpPower, ForceMode2D.Impulse);
-                afterWallJumpStiff = 10;
+                wallIsRight = 1;
+                afterWallJumpStiff = 20;
             }
+        }
+
+        //벽점프&관성
+        if (wallIsRight == 1)
+        {
+            rigid.linearVelocityX = -afterWallJumpStiff;
+        }
+        else if (wallIsRight == -1)
+        {
+            rigid.linearVelocityX = afterWallJumpStiff;
         }
 
         //stop speed
@@ -153,12 +165,17 @@ public class PlayerMove : MonoBehaviour
 
         //move speed
         float h = Input.GetAxisRaw("Horizontal");
+        if (afterWallJumpStiff < 0)
+        {
+             h = Input.GetAxisRaw("Horizontal");
+        }
+        
         if (grappling.isAttach)
         {
             rigid.AddForce(Vector2.right * h * 10, ForceMode2D.Force);
         }
 
-
+            
 
 
         if (dashTime == 0)
@@ -254,6 +271,8 @@ public class PlayerMove : MonoBehaviour
             dashCoolDown--;
         if (afterWallJumpStiff > 0)
             afterWallJumpStiff--;
+        if (afterWallJumpStiff == 0)
+            wallIsRight = 0;
     }
     private void OnTriggerEnter2D(Collider2D collision)
     {

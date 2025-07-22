@@ -26,6 +26,9 @@ public class PlayerMove : MonoBehaviour
     public float dashTime;
     public float dashCoolDown;
 
+    public Transform Double;
+    public bool isDoubleActivated = false;
+    private bool doubleEffectPlayed = false;
     Rigidbody2D rigid;
     SpriteRenderer spriteRenderer;
     Animator animator;
@@ -143,6 +146,26 @@ public class PlayerMove : MonoBehaviour
 
     void FixedUpdate()
     {
+        // 더블점프 이펙트
+        if (jumpCount == 2 && !doubleEffectPlayed)
+        {
+            Double doubleScript = Double.GetComponent<Double>();
+            if (doubleScript != null && !doubleScript.isDoubleActivated)
+            {
+                doubleScript.Activate();
+                doubleEffectPlayed = true; // 한 번만 실행되게
+            }
+        }
+
+        // jumpCount가 초기화되면 다시 false로
+        if (jumpCount < 2 && doubleEffectPlayed)
+        {
+            doubleEffectPlayed = false;
+        }
+
+
+
+
 
         //  Grappling 상태에 따라 속도 변경
         if (grappling.isAttach)
@@ -314,7 +337,10 @@ public class PlayerMove : MonoBehaviour
     {
         rigid.linearVelocity = Vector2.zero;
     }
-    
 
+    public void ResetDouble()
+    {
+        isDoubleActivated = false;
+    }
 
 }

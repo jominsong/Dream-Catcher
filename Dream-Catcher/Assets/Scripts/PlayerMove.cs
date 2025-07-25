@@ -25,10 +25,12 @@ public class PlayerMove : MonoBehaviour
     public float dashCount;
     public float dashTime;
     public float dashCoolDown;
-
+    //이단점프 이펙트
     public Transform Double;
     public bool isDoubleActivated = false;
     private bool doubleEffectPlayed = false;
+
+    private GrapplingHook grapplingHook;
     Rigidbody2D rigid;
     SpriteRenderer spriteRenderer;
     Animator animator;
@@ -37,6 +39,7 @@ public class PlayerMove : MonoBehaviour
 
     void Awake()
     {
+        grapplingHook = GetComponent<GrapplingHook>();
         rigid = GetComponent<Rigidbody2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         animator = GetComponent<Animator>();
@@ -51,7 +54,7 @@ public class PlayerMove : MonoBehaviour
         RaycastHit2D rayRight = Physics2D.Raycast(rigid.position, Vector3.right, 0.5f, LayerMask.GetMask("Platform"));
         RaycastHit2D rayLeft = Physics2D.Raycast(rigid.position, Vector3.left, 0.5f, LayerMask.GetMask("Platform"));
         //jump
-        if (Input.GetButtonDown("Jump") && jumpCount < maxJumpCount)
+        if (Input.GetButtonDown("Jump") && jumpCount < maxJumpCount && !grappling.isAttach)
         {
             rigid.linearVelocityY = 0;
             rigid.AddForce(Vector2.up * JumpPower, ForceMode2D.Impulse);
@@ -94,11 +97,14 @@ public class PlayerMove : MonoBehaviour
         }
 
         // 방향 반전: 실제 이동 방향 기준
-        if (Mathf.Abs(rigid.linearVelocity.x) > 0.01f)
+        if (Input.GetKeyDown(KeyCode.LeftArrow))
         {
-            spriteRenderer.flipX = rigid.linearVelocity.x < 0;
+            spriteRenderer.flipX=true;
         }
-
+        if (Input.GetKeyDown(KeyCode.RightArrow))
+        {
+            spriteRenderer.flipX = false;
+        }
 
         //walk animation
         if (Mathf.Abs(rigid.linearVelocity.x) < 0.7)

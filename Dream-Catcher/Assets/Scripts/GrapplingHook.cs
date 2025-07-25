@@ -7,12 +7,13 @@ public class GrapplingHook : MonoBehaviour
     public bool isHookActivate;
     public bool isLineMax;
     public bool isAttach;
-
+    PlayerMove PlayerMove;
     Vector2 hookDir;
     Transform targetRing;
 
     void Start()
     {
+        PlayerMove = GetComponent<PlayerMove>();
         line.positionCount = 2;
         line.endWidth = line.startWidth = 0.05f;
         line.SetPosition(0, transform.position);
@@ -37,6 +38,7 @@ public class GrapplingHook : MonoBehaviour
                 isHookActivate = true;
                 isLineMax = false;
                 hook.gameObject.SetActive(true);
+                GetComponent<Animator>().SetTrigger("is grappling");
             }
         }
 
@@ -63,11 +65,14 @@ public class GrapplingHook : MonoBehaviour
         {
             if (Input.GetKeyDown(KeyCode.Space))
             {
+                GetComponent<Animator>().SetTrigger("is grapjump");
                 isAttach = false;
                 isHookActivate = false;
                 isLineMax = false;
                 hook.GetComponent<Hooking>().springJoint.enabled = false;
                 hook.gameObject.SetActive(false);
+                PlayerMove.jumpCount = 1;
+
             }
         }
     }

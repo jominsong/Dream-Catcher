@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 5542021923661267423}
   - component: {fileID: 6994693458331407390}
   m_Layer: 0
-  m_Name: Silver
+  m_Name: Gold
   m_TagString: Item
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -78,7 +78,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 6582046967323461550, guid: 274d64617113287499ed1c4165d1d8f3, type: 3}
+  m_Sprite: {fileID: -4986890610287934012, guid: 274d64617113287499ed1c4165d1d8f3, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0

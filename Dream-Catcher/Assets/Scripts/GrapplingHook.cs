@@ -4,6 +4,7 @@ public class GrapplingHook : MonoBehaviour
 {
     public LineRenderer line;
     public Transform hook;
+    public AudioClip clip;
     public bool isHookActivate;
     public bool isLineMax;
     public bool isAttach;
@@ -39,6 +40,8 @@ public class GrapplingHook : MonoBehaviour
                 isLineMax = false;
                 hook.gameObject.SetActive(true);
                 GetComponent<Animator>().SetTrigger("is grappling");
+                GetComponent<Animator>().SetBool("is diving", false);
+                SoundManager.instance.PlaySFX("Hook");
             }
         }
 
@@ -72,6 +75,7 @@ public class GrapplingHook : MonoBehaviour
                 hook.GetComponent<Hooking>().springJoint.enabled = false;
                 hook.gameObject.SetActive(false);
                 PlayerMove.jumpCount = 1;
+                SoundManager.instance.PlaySFX("Hook Jump");
 
             }
         }

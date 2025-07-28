@@ -231,9 +231,6 @@ AnimatorStateTransition:
   - m_ConditionMode: 1
     m_ConditionEvent: is jumping
     m_EventTreshold: 0
-  - m_ConditionMode: 2
-    m_ConditionEvent: is walking
-    m_EventTreshold: 0
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 8355943917232717944}
   m_Solo: 0
@@ -504,10 +501,10 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 2
-    m_ConditionEvent: is walking
+    m_ConditionEvent: is jumping
     m_EventTreshold: 0
   - m_ConditionMode: 2
-    m_ConditionEvent: is jumping
+    m_ConditionEvent: is diving
     m_EventTreshold: 0
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: -4869029034966262575}
@@ -656,7 +653,7 @@ AnimatorStateMachine:
     m_Position: {x: -50, y: -190, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -7624286335528679507}
-    m_Position: {x: 170, y: -130, z: 0}
+    m_Position: {x: 190, y: -130, z: 0}
   m_ChildStateMachines: []
   m_AnyStateTransitions:
   - {fileID: -2001914053355259624}
@@ -965,9 +962,6 @@ AnimatorStateTransition:
   - m_ConditionMode: 2
     m_ConditionEvent: is jumping
     m_EventTreshold: 0
-  - m_ConditionMode: 2
-    m_ConditionEvent: is walking
-    m_EventTreshold: 0
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: -4869029034966262575}
   m_Solo: 0
@@ -1018,8 +1012,8 @@ AnimatorStateTransition:
   m_PrefabAsset: {fileID: 0}
   m_Name: 
   m_Conditions:
-  - m_ConditionMode: 1
-    m_ConditionEvent: is grappling
+  - m_ConditionMode: 2
+    m_ConditionEvent: is jumping
     m_EventTreshold: 0
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: -4869029034966262575}

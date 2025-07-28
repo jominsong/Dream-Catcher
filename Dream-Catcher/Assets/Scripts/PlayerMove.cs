@@ -29,6 +29,8 @@ public class PlayerMove : MonoBehaviour
     public Transform Double;
     public bool isDoubleActivated = false;
     private bool doubleEffectPlayed = false;
+    //사운드 이펙트
+    public AudioClip clip;
 
     private GrapplingHook grapplingHook;
     Rigidbody2D rigid;
@@ -61,6 +63,14 @@ public class PlayerMove : MonoBehaviour
             animator.SetBool("is jumping", true);
             animator.SetBool("is diving", false);
             jumpCount++;
+            if (jumpCount <= 1)
+            {
+                SoundManager.instance.PlaySFX("Jump");
+            }
+            if (jumpCount == 2)
+            {
+                SoundManager.instance.PlaySFX("Double Jump");
+            }
 
             // 벽 점프 감지
             if (rayLeft.collider != null)
@@ -69,6 +79,7 @@ public class PlayerMove : MonoBehaviour
                 animator.SetBool("is jumping", false);
                 wallIsRight = -1;
                 afterWallJumpStiff = 20;
+                SoundManager.instance.PlaySFX("Jump");
             }
             else if (rayRight.collider != null)
             {
@@ -77,6 +88,7 @@ public class PlayerMove : MonoBehaviour
                 rigid.AddForce(Vector2.left * wallJumpPower, ForceMode2D.Impulse);
                 wallIsRight = 1;
                 afterWallJumpStiff = 20;
+                SoundManager.instance.PlaySFX("Jump");
             }
         }
 
@@ -311,12 +323,15 @@ public class PlayerMove : MonoBehaviour
             bool isBronze = collision.gameObject.name.Contains("Bronze");
             bool isSilver = collision.gameObject.name.Contains("Silver");
             bool isGold = collision.gameObject.name.Contains("Gold");
+            bool isBigGold = collision.gameObject.name.Contains("Big Gold");
             if (isBronze)
                 GameManager.stagePoint += 100;
             else if (isSilver)
                 GameManager.stagePoint += 500;
             else if (isGold)
                 GameManager.stagePoint += 1000;
+            else if (isBigGold)
+                GameManager.stagePoint += 5000;
             //Deactive Item
             collision.gameObject.SetActive(false);
         }

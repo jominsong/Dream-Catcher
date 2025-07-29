@@ -329,9 +329,16 @@ public class PlayerMove : MonoBehaviour
             else if (isSilver)
                 GameManager.stagePoint += 500;
             else if (isGold)
+            {
                 GameManager.stagePoint += 1000;
+                SoundManager.instance.PlaySFX("Gold");
+            }
+                
             else if (isBigGold)
+            {
                 GameManager.stagePoint += 5000;
+                SoundManager.instance.PlaySFX("Big Gold");
+            }
             //Deactive Item
             collision.gameObject.SetActive(false);
         }

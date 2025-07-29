@@ -10,10 +10,14 @@ public class SoundManager : MonoBehaviour
     {
         public string name;
         public AudioClip clip;
+        [Range(0f, 1f)]
+        public float volume = 1f;
     }
+
 
     public Sound[] sounds; // Inspector에서 추가
     private Dictionary<string, AudioClip> soundDict;
+
 
     private void Awake()
     {
@@ -41,18 +45,20 @@ public class SoundManager : MonoBehaviour
 
     public void PlaySFX(string sfxName)
     {
-        if (soundDict.ContainsKey(sfxName))
+        Sound sound = System.Array.Find(sounds, s => s.name == sfxName);
+        if (sound != null)
         {
-            AudioClip clip = soundDict[sfxName];
             GameObject go = new GameObject(sfxName + "Sound");
             AudioSource source = go.AddComponent<AudioSource>();
-            source.clip = clip;
+            source.clip = sound.clip;
+            source.volume = sound.volume;
             source.Play();
-            Destroy(go, clip.length);
+            Destroy(go, sound.clip.length);
         }
         else
         {
             Debug.LogWarning($"'{sfxName}' 사운드가 SoundManager에 등록되어 있지 않습니다.");
         }
     }
+
 }

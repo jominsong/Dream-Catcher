@@ -184,7 +184,6 @@ public class PlayerMove : MonoBehaviour
 
 
 
-
         //  Grappling 상태에 따라 속도 변경
         if (grappling.isAttach)
             {
@@ -269,16 +268,12 @@ public class PlayerMove : MonoBehaviour
         }
 
         // Super Jump/Speed
-        if (rigid.linearVelocity.y < 0)
+        RaycastHit2D raySpeed = Physics2D.Raycast(rigid.position, Vector3.down, 1, LayerMask.GetMask("Speed"));
+
+        if (raySpeed.collider != null)
         {
-
-            RaycastHit2D raySpeed = Physics2D.Raycast(rigid.position, Vector3.down, 1, LayerMask.GetMask("Speed"));
-
-            if (raySpeed.collider != null)
-            {
-                if (raySpeed.distance < 0.6f)
-                    maxSpeed = 12;
-            }
+            if (raySpeed.distance < 0.6f)
+                maxSpeed = 12;
         }
         RaycastHit2D SpeedHit = Physics2D.Raycast(rigid.position, Vector2.down, 1f, LayerMask.GetMask("Platform","Jump"));
         if (SpeedHit.collider != null && SpeedHit.distance < 0.6f)

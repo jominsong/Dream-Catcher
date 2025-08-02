@@ -19,9 +19,8 @@ public class Double : MonoBehaviour
 
     public void OnAnimationEnd()
     {
-        Debug.Log("애니메이션 끝났어요!");
         animator.SetBool("Double", false);
         gameObject.SetActive(false);
-        isDoubleActivated = false; // 다시 활성화 가능하도록
+        isDoubleActivated = false; 
     }
 }

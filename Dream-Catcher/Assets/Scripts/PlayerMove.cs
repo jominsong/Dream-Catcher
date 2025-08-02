@@ -8,7 +8,7 @@ using Unity.XR.GoogleVr;
 public class PlayerMove : MonoBehaviour
 {
     public GameManager GameManager;
-    private float maxSpeed = 5;
+    public float maxSpeed = 5;
     //Jump
     private float JumpPower = 10;
     public float wallJumpPower;
@@ -186,14 +186,10 @@ public class PlayerMove : MonoBehaviour
 
         //  Grappling 상태에 따라 속도 변경
         if (grappling.isAttach)
-            {
+        {
                 maxSpeed = 7f; // 줄에 매달렸을 때 속도 증가 (원하는 값으로 조정 가능)
                 rigid.AddForce(Vector2.right * Input.GetAxisRaw("Horizontal") * 10, ForceMode2D.Force);
-            }
-            else
-            {
-                maxSpeed = 5f; // 기본 속도
-            }
+        }
 
 
         Debug.DrawRay(rigid.position, Vector3.down, new Color(0, 1, 0)); // 시각 디버깅용
@@ -218,14 +214,7 @@ public class PlayerMove : MonoBehaviour
             
 
 
-        if (dashTime == 0)
-        {
-            animator.SetBool("is sliding", false);
-            if (rigid.linearVelocity.x > maxSpeed)
-                rigid.linearVelocity = new Vector2(maxSpeed, rigid.linearVelocityY);
-            else if (rigid.linearVelocity.x < maxSpeed * (-1))
-                rigid.linearVelocity = new Vector2(maxSpeed * (-1), rigid.linearVelocityY);
-        }
+       
 
         //플렛폼 감지
         if (rigid.linearVelocity.y < 0)
@@ -244,7 +233,6 @@ public class PlayerMove : MonoBehaviour
                 animator.SetBool("is wallkick", false);
                 jumpCount = 0;
                 dashCount = 0;
-                Debug.Log("초기화됨");
             }
 
         }
@@ -275,12 +263,12 @@ public class PlayerMove : MonoBehaviour
             if (raySpeed.distance < 0.6f)
                 maxSpeed = 12;
         }
-        RaycastHit2D SpeedHit = Physics2D.Raycast(rigid.position, Vector2.down, 1f, LayerMask.GetMask("Platform","Jump"));
+
+        RaycastHit2D SpeedHit = Physics2D.Raycast(rigid.position, Vector2.down, 1f, LayerMask.GetMask("Platform", "Jump"));
         if (SpeedHit.collider != null && SpeedHit.distance < 0.6f)
         {
             maxSpeed = 5;
         }
-
 
         if (rigid.linearVelocity.y < 0)
         {
@@ -299,8 +287,18 @@ public class PlayerMove : MonoBehaviour
             JumpPower = 10;
         }
 
+        if (dashTime == 0)
+        {
+            animator.SetBool("is sliding", false);
 
-        
+            if (rigid.linearVelocity.x > maxSpeed)
+                rigid.linearVelocity = new Vector2(maxSpeed, rigid.linearVelocityY);
+            else if (rigid.linearVelocity.x < -maxSpeed)
+                rigid.linearVelocity = new Vector2(-maxSpeed, rigid.linearVelocityY);
+        }
+
+
+
         if (dashTime > 0)
             dashTime--;
         if (dashCoolDown > 0)

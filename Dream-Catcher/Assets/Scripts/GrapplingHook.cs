@@ -76,6 +76,7 @@ public class GrapplingHook : MonoBehaviour
                 hook.gameObject.SetActive(false);
                 PlayerMove.jumpCount = 1;
                 SoundManager.instance.PlaySFX("Hook Jump");
+                PlayerMove.maxSpeed = 5f;
 
             }
         }

@@ -55,10 +55,6 @@ public class SoundManager : MonoBehaviour
             source.Play();
             Destroy(go, sound.clip.length);
         }
-        else
-        {
-            Debug.LogWarning($"'{sfxName}' 사운드가 SoundManager에 등록되어 있지 않습니다.");
-        }
     }
 
 }

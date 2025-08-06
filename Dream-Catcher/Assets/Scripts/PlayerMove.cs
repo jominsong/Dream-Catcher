@@ -29,8 +29,11 @@ public class PlayerMove : MonoBehaviour
     public Transform Double;
     public bool isDoubleActivated = false;
     private bool doubleEffectPlayed = false;
+    public float isOnFloor;
     //사운드 이펙트
     public AudioClip clip;
+
+    public SummonPlatform summonplatform;
 
     private GrapplingHook grapplingHook;
     Rigidbody2D rigid;
@@ -55,6 +58,9 @@ public class PlayerMove : MonoBehaviour
         RaycastHit2D rayDown = Physics2D.Raycast(rigid.position, Vector3.down, 0.5f, LayerMask.GetMask("Platform"));
         RaycastHit2D rayRight = Physics2D.Raycast(rigid.position, Vector3.right, 0.5f, LayerMask.GetMask("Platform"));
         RaycastHit2D rayLeft = Physics2D.Raycast(rigid.position, Vector3.left, 0.5f, LayerMask.GetMask("Platform"));
+        RaycastHit2D summonRayDown = Physics2D.Raycast(rigid.position, Vector3.down, 0.5f, LayerMask.GetMask("SummonedPlatform"));
+        RaycastHit2D summonRayRight = Physics2D.Raycast(rigid.position, Vector3.right, 0.5f, LayerMask.GetMask("SummonedPlatform"));
+        RaycastHit2D summonRayLeft = Physics2D.Raycast(rigid.position, Vector3.left, 0.5f, LayerMask.GetMask("SummonedPlatform"));
         //jump
         if (Input.GetButtonDown("Jump") && jumpCount < maxJumpCount && !grappling.isAttach)
         {
@@ -63,6 +69,7 @@ public class PlayerMove : MonoBehaviour
             animator.SetBool("is jumping", true);
             animator.SetBool("is diving", false);
             jumpCount++;
+            JumpPower = 10;
             if (jumpCount <= 1)
             {
                 SoundManager.instance.PlaySFX("Jump");
@@ -73,22 +80,20 @@ public class PlayerMove : MonoBehaviour
             }
 
             // 벽 점프 감지
-            if (rayLeft.collider != null)
+            if (rayLeft.collider != null || summonRayLeft.collider != null)
             {
                 animator.SetBool("is wallkick", true);
                 animator.SetBool("is jumping", false);
                 wallIsRight = -1;
                 afterWallJumpStiff = 20;
-                SoundManager.instance.PlaySFX("Jump");
             }
-            else if (rayRight.collider != null)
+            else if (rayRight.collider != null || summonRayRight.collider != null)
             {
                 animator.SetBool("is wallkick", true);
                 animator.SetBool("is jumping", false);
                 rigid.AddForce(Vector2.left * wallJumpPower, ForceMode2D.Impulse);
                 wallIsRight = 1;
                 afterWallJumpStiff = 20;
-                SoundManager.instance.PlaySFX("Jump");
             }
         }
 
@@ -135,9 +140,11 @@ public class PlayerMove : MonoBehaviour
                 if (dashCount < 1 && dashCoolDown == 0)
                 {
                     animator.SetBool("is sliding", true);
-                    
+                    SoundManager.instance.PlaySFX("Sliding");
+
                     if (rayDown.collider == null)
                     {
+                        SoundManager.instance.PlaySFX("Diving");
                         animator.SetBool("is diving", true);
                         rigid.linearVelocity = new Vector2(h * 12, 5);
                     }
@@ -184,10 +191,9 @@ public class PlayerMove : MonoBehaviour
 
 
 
-        //  Grappling 상태에 따라 속도 변경
         if (grappling.isAttach)
         {
-                maxSpeed = 7f; // 줄에 매달렸을 때 속도 증가 (원하는 값으로 조정 가능)
+                maxSpeed = 9f;
                 rigid.AddForce(Vector2.right * Input.GetAxisRaw("Horizontal") * 10, ForceMode2D.Force);
         }
 
@@ -197,7 +203,9 @@ public class PlayerMove : MonoBehaviour
         RaycastHit2D rayHit = Physics2D.Raycast(rigid.position, Vector2.down, 1f, LayerMask.GetMask("Platform", "Speed", "Jump"));
         RaycastHit2D rayRight = Physics2D.Raycast(rigid.position, Vector2.right, 0.5f, LayerMask.GetMask("Platform", "Speed", "Jump"));
         RaycastHit2D rayLeft = Physics2D.Raycast(rigid.position, Vector2.left, 0.5f, LayerMask.GetMask("Platform", "Speed", "Jump"));
-
+        RaycastHit2D summonRayHit = Physics2D.Raycast(rigid.position, Vector2.down, 0.5f, LayerMask.GetMask("SummonedPlatform"));
+        RaycastHit2D summonRayRight = Physics2D.Raycast(rigid.position, Vector2.right, 0.5f, LayerMask.GetMask("SummonedPlatform"));
+        RaycastHit2D summonRayLeft = Physics2D.Raycast(rigid.position, Vector2.left, 0.5f, LayerMask.GetMask("SummonedPlatform"));
 
         //move speed
         float h = Input.GetAxisRaw("Horizontal");
@@ -227,18 +235,24 @@ public class PlayerMove : MonoBehaviour
 
 
             }
-            if (rayHit.collider != null || rayRight.collider != null || rayLeft.collider != null)
+            if (rayHit.collider != null || rayRight.collider != null || rayLeft.collider != null || summonRayHit.collider != null || summonRayLeft.collider != null || summonRayRight.collider != null)
             {
                 animator.SetBool("is diving", false);
                 animator.SetBool("is wallkick", false);
                 jumpCount = 0;
                 dashCount = 0;
             }
-
+            if (rayHit.collider != null || rayRight.collider != null || rayLeft.collider != null)
+                summonplatform.summonPlatformCount = 0;
         }
+        if (rayHit.collider == null)
+            isOnFloor = 0;
+        else
+            isOnFloor = 1;
+
         if (afterWallJumpStiff == 0 && dashTime == 0)
         {
-            if (rayRight.collider == null && rayLeft.collider == null)
+            if ((rayRight.collider == null && rayLeft.collider == null) || (summonRayRight.collider == null && summonRayLeft.collider == null))
             {
                 rigid.AddForce(Vector2.right * h, ForceMode2D.Impulse);
                 animator.SetBool("is climbing", false);
@@ -316,7 +330,7 @@ public class PlayerMove : MonoBehaviour
             bool isBronze = collision.gameObject.name.Contains("Bronze");
             bool isSilver = collision.gameObject.name.Contains("Silver");
             bool isGold = collision.gameObject.name.Contains("Gold");
-            bool isBigGold = collision.gameObject.name.Contains("Big Gold");
+            bool isBigGold = collision.gameObject.name.Contains("Coin");
             if (isBronze)
                 GameManager.stagePoint += 100;
             else if (isSilver)
@@ -325,8 +339,7 @@ public class PlayerMove : MonoBehaviour
             {
                 GameManager.stagePoint += 1000;
                 SoundManager.instance.PlaySFX("Gold");
-            }
-                
+            }    
             else if (isBigGold)
             {
                 GameManager.stagePoint += 5000;

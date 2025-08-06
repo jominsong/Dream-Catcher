@@ -41,7 +41,7 @@ public class GrapplingHook : MonoBehaviour
                 hook.gameObject.SetActive(true);
                 GetComponent<Animator>().SetTrigger("is grappling");
                 GetComponent<Animator>().SetBool("is diving", false);
-                SoundManager.instance.PlaySFX("Hook");
+                SoundManager.instance.PlaySFX("String4");
             }
         }
 
@@ -75,7 +75,7 @@ public class GrapplingHook : MonoBehaviour
                 hook.GetComponent<Hooking>().springJoint.enabled = false;
                 hook.gameObject.SetActive(false);
                 PlayerMove.jumpCount = 1;
-                SoundManager.instance.PlaySFX("Hook Jump");
+                SoundManager.instance.PlaySFX("String4 Jump");
                 PlayerMove.maxSpeed = 5f;
 
             }

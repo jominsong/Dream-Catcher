@@ -8,10 +8,11 @@ using Unity.XR.GoogleVr;
 public class PlayerMove : MonoBehaviour
 {
     public GameManager GameManager;
-    private float maxSpeed = 5;
+    public float maxSpeed = 5;
     //Jump
     private float JumpPower = 10;
     public float wallJumpPower;
+    private int wallIsRight;
     public float antiGravity;
     public int jumpCount;
     public int maxJumpCount;
@@ -24,7 +25,13 @@ public class PlayerMove : MonoBehaviour
     public float dashCount;
     public float dashTime;
     public float dashCoolDown;
+    //for SummonPlatform.cs
+    public float isOnFloor;
+    //ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Æ®
+    public AudioClip clip;
+    public SummonPlatform summonplatform;
 
+    private GrapplingHook grapplingHook;
     Rigidbody2D rigid;
     SpriteRenderer spriteRenderer;
     Animator animator;
@@ -33,6 +40,7 @@ public class PlayerMove : MonoBehaviour
 
     void Awake()
     {
+        grapplingHook = GetComponent<GrapplingHook>();
         rigid = GetComponent<Rigidbody2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         animator = GetComponent<Animator>();
@@ -46,30 +54,54 @@ public class PlayerMove : MonoBehaviour
         RaycastHit2D rayDown = Physics2D.Raycast(rigid.position, Vector3.down, 0.5f, LayerMask.GetMask("Platform"));
         RaycastHit2D rayRight = Physics2D.Raycast(rigid.position, Vector3.right, 0.5f, LayerMask.GetMask("Platform"));
         RaycastHit2D rayLeft = Physics2D.Raycast(rigid.position, Vector3.left, 0.5f, LayerMask.GetMask("Platform"));
+        RaycastHit2D summonRayDown = Physics2D.Raycast(rigid.position, Vector3.down, 0.5f, LayerMask.GetMask("SummonedPlatform"));
+        RaycastHit2D summonRayRight = Physics2D.Raycast(rigid.position, Vector3.right, 0.5f, LayerMask.GetMask("SummonedPlatform"));
+        RaycastHit2D summonRayLeft = Physics2D.Raycast(rigid.position, Vector3.left, 0.5f, LayerMask.GetMask("SummonedPlatform"));
         //jump
-        if (Input.GetButtonDown("Jump") && jumpCount < maxJumpCount)
+        if (Input.GetButtonDown("Jump") && jumpCount < maxJumpCount && !grappling.isAttach)
         {
             rigid.linearVelocityY = 0;
             rigid.AddForce(Vector2.up * JumpPower, ForceMode2D.Impulse);
             animator.SetBool("is jumping", true);
             animator.SetBool("is diving", false);
             jumpCount++;
+            if (jumpCount <= 1)
+            {
+                SoundManager.instance.PlaySFX("Jump");
+            }
+            if (jumpCount == 2)
+            {
+                SoundManager.instance.PlaySFX("Double Jump");
+            }
 
-            // º® Á¡ÇÁ °¨Áö
-            if (rayLeft.collider != null)
+            // ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+            if (rayLeft.collider != null || summonRayLeft.collider != null)
             {
                 animator.SetBool("is wallkick", true);
                 animator.SetBool("is jumping", false);
-                rigid.AddForce(Vector2.right * wallJumpPower, ForceMode2D.Impulse);
-                afterWallJumpStiff = 10;
+                wallIsRight = -1;
+                afterWallJumpStiff = 20;
+                SoundManager.instance.PlaySFX("Jump");
             }
-            else if (rayRight.collider != null)
+            else if (rayRight.collider != null || summonRayRight.collider != null)
             {
                 animator.SetBool("is wallkick", true);
                 animator.SetBool("is jumping", false);
                 rigid.AddForce(Vector2.left * wallJumpPower, ForceMode2D.Impulse);
-                afterWallJumpStiff = 10;
+                wallIsRight = 1;
+                afterWallJumpStiff = 20;
+                SoundManager.instance.PlaySFX("Jump");
             }
+        }
+
+        //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½&ï¿½ï¿½ï¿½ï¿½
+        if (wallIsRight == 1)
+        {
+            rigid.linearVelocityX = -afterWallJumpStiff;
+        }
+        else if (wallIsRight == -1)
+        {
+            rigid.linearVelocityX = afterWallJumpStiff;
         }
 
         //stop speed
@@ -78,12 +110,15 @@ public class PlayerMove : MonoBehaviour
             rigid.linearVelocity = new Vector2(rigid.linearVelocity.normalized.x * 1.5f, rigid.linearVelocity.y);
         }
 
-        // ¹æÇâ ¹ÝÀü: ½ÇÁ¦ ÀÌµ¿ ¹æÇâ ±âÁØ
-        if (Mathf.Abs(rigid.linearVelocity.x) > 0.01f)
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½: ï¿½ï¿½ï¿½ï¿½ ï¿½Ìµï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+        if (Input.GetKeyDown(KeyCode.LeftArrow))
         {
-            spriteRenderer.flipX = rigid.linearVelocity.x < 0;
+            spriteRenderer.flipX=true;
         }
-
+        if (Input.GetKeyDown(KeyCode.RightArrow))
+        {
+            spriteRenderer.flipX = false;
+        }
 
         //walk animation
         if (Mathf.Abs(rigid.linearVelocity.x) < 0.7)
@@ -103,7 +138,7 @@ public class PlayerMove : MonoBehaviour
                 {
                     animator.SetBool("is sliding", true);
                     
-                    if (rayDown.collider == null)
+                    if (rayDown.collider == null || summonRayDown.collider == null)
                     {
                         animator.SetBool("is diving", true);
                         rigid.linearVelocity = new Vector2(h * 12, 5);
@@ -132,33 +167,36 @@ public class PlayerMove : MonoBehaviour
     void FixedUpdate()
     {
 
-        //  Grappling »óÅÂ¿¡ µû¶ó ¼Óµµ º¯°æ
+        //  Grappling ï¿½ï¿½ï¿½Â¿ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Óµï¿½ ï¿½ï¿½ï¿½ï¿½
         if (grappling.isAttach)
             {
-                maxSpeed = 7f; // ÁÙ¿¡ ¸Å´Þ·ÈÀ» ¶§ ¼Óµµ Áõ°¡ (¿øÇÏ´Â °ªÀ¸·Î Á¶Á¤ °¡´É)
+                maxSpeed = 7f; // ï¿½Ù¿ï¿½ ï¿½Å´Þ·ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Óµï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)
                 rigid.AddForce(Vector2.right * Input.GetAxisRaw("Horizontal") * 10, ForceMode2D.Force);
             }
-            else
-            {
-                maxSpeed = 5f; // ±âº» ¼Óµµ
-            }
 
 
-        Debug.DrawRay(rigid.position, Vector3.down, new Color(0, 1, 0)); // ½Ã°¢ µð¹ö±ë¿ë
+        Debug.DrawRay(rigid.position, Vector3.down, new Color(0, 1, 0)); // ï¿½Ã°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
-        RaycastHit2D rayHit = Physics2D.Raycast(rigid.position, Vector2.down, 1f, LayerMask.GetMask("Platform", "Speed", "Jump"));
+        RaycastHit2D rayHit = Physics2D.Raycast(rigid.position, Vector2.down, 0.7f, LayerMask.GetMask("Platform", "Speed", "Jump"));
         RaycastHit2D rayRight = Physics2D.Raycast(rigid.position, Vector2.right, 0.5f, LayerMask.GetMask("Platform", "Speed", "Jump"));
         RaycastHit2D rayLeft = Physics2D.Raycast(rigid.position, Vector2.left, 0.5f, LayerMask.GetMask("Platform", "Speed", "Jump"));
-
+        RaycastHit2D summonRayHit = Physics2D.Raycast(rigid.position, Vector2.down, 0.5f, LayerMask.GetMask("SummonedPlatform"));
+        RaycastHit2D summonRayRight = Physics2D.Raycast(rigid.position, Vector2.right, 0.5f, LayerMask.GetMask("SummonedPlatform"));
+        RaycastHit2D summonRayLeft = Physics2D.Raycast(rigid.position, Vector2.left, 0.5f, LayerMask.GetMask("SummonedPlatform"));
 
         //move speed
         float h = Input.GetAxisRaw("Horizontal");
+        if (afterWallJumpStiff < 0)
+        {
+             h = Input.GetAxisRaw("Horizontal");
+        }
+        
         if (grappling.isAttach)
         {
             rigid.AddForce(Vector2.right * h * 10, ForceMode2D.Force);
         }
 
-
+            
 
 
         if (dashTime == 0)
@@ -170,7 +208,7 @@ public class PlayerMove : MonoBehaviour
                 rigid.linearVelocity = new Vector2(maxSpeed * (-1), rigid.linearVelocityY);
         }
 
-        //ÇÃ·¿Æû °¨Áö
+        //ï¿½Ã·ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         if (rigid.linearVelocity.y < 0)
         {
             if (rayHit.collider != null)
@@ -178,22 +216,26 @@ public class PlayerMove : MonoBehaviour
                 animator.SetBool("is diving", false);
                 animator.SetBool("is wallkick", false);
                 animator.SetBool("is jumping", false);
-
-
             }
-            if (rayHit.collider != null || rayRight.collider != null || rayLeft.collider != null)
+            if (rayHit.collider != null || rayRight.collider != null || rayLeft.collider != null || summonRayHit.collider != null || summonRayLeft.collider != null || summonRayRight.collider != null)
             {
                 animator.SetBool("is diving", false);
                 animator.SetBool("is wallkick", false);
                 jumpCount = 0;
                 dashCount = 0;
-                Debug.Log("ÃÊ±âÈ­µÊ");
+                Debug.Log("ï¿½Ê±ï¿½È­ï¿½ï¿½");
             }
-
+            if (rayHit.collider != null || rayRight.collider != null || rayLeft.collider != null)
+                summonplatform.summonPlatformCount = 0;
         }
+        if (rayHit.collider == null)
+            isOnFloor = 0;
+        else
+            isOnFloor = 1;
+
         if (afterWallJumpStiff == 0 && dashTime == 0)
         {
-            if (rayRight.collider == null && rayLeft.collider == null)
+            if ((rayRight.collider == null && rayLeft.collider == null) || (summonRayRight.collider == null && summonRayLeft.collider == null))
             {
                 rigid.AddForce(Vector2.right * h, ForceMode2D.Impulse);
                 animator.SetBool("is climbing", false);
@@ -211,16 +253,12 @@ public class PlayerMove : MonoBehaviour
         }
 
         // Super Jump/Speed
-        if (rigid.linearVelocity.y < 0)
+        RaycastHit2D raySpeed = Physics2D.Raycast(rigid.position, Vector3.down, 1, LayerMask.GetMask("Speed"));
+
+        if (raySpeed.collider != null)
         {
-
-            RaycastHit2D raySpeed = Physics2D.Raycast(rigid.position, Vector3.down, 1, LayerMask.GetMask("Speed"));
-
-            if (raySpeed.collider != null)
-            {
-                if (raySpeed.distance < 0.6f)
-                    maxSpeed = 12;
-            }
+            if (raySpeed.distance < 0.6f)
+                maxSpeed = 12;
         }
         RaycastHit2D SpeedHit = Physics2D.Raycast(rigid.position, Vector2.down, 1f, LayerMask.GetMask("Platform","Jump"));
         if (SpeedHit.collider != null && SpeedHit.distance < 0.6f)
@@ -254,6 +292,8 @@ public class PlayerMove : MonoBehaviour
             dashCoolDown--;
         if (afterWallJumpStiff > 0)
             afterWallJumpStiff--;
+        if (afterWallJumpStiff == 0)
+            wallIsRight = 0;
     }
     private void OnTriggerEnter2D(Collider2D collision)
     {
@@ -263,12 +303,22 @@ public class PlayerMove : MonoBehaviour
             bool isBronze = collision.gameObject.name.Contains("Bronze");
             bool isSilver = collision.gameObject.name.Contains("Silver");
             bool isGold = collision.gameObject.name.Contains("Gold");
+            bool isBigGold = collision.gameObject.name.Contains("Big Gold");
             if (isBronze)
                 GameManager.stagePoint += 100;
             else if (isSilver)
                 GameManager.stagePoint += 500;
             else if (isGold)
+            {
                 GameManager.stagePoint += 1000;
+                SoundManager.instance.PlaySFX("Gold");
+            }
+                
+            else if (isBigGold)
+            {
+                GameManager.stagePoint += 5000;
+                SoundManager.instance.PlaySFX("Big Gold");
+            }
             //Deactive Item
             collision.gameObject.SetActive(false);
         }
@@ -295,7 +345,5 @@ public class PlayerMove : MonoBehaviour
     {
         rigid.linearVelocity = Vector2.zero;
     }
-    
-
 
 }

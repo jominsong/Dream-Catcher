@@ -4,15 +4,17 @@ public class GrapplingHook : MonoBehaviour
 {
     public LineRenderer line;
     public Transform hook;
+    public AudioClip clip;
     public bool isHookActivate;
     public bool isLineMax;
     public bool isAttach;
-
+    PlayerMove PlayerMove;
     Vector2 hookDir;
     Transform targetRing;
 
     void Start()
     {
+        PlayerMove = GetComponent<PlayerMove>();
         line.positionCount = 2;
         line.endWidth = line.startWidth = 0.05f;
         line.SetPosition(0, transform.position);
@@ -37,12 +39,15 @@ public class GrapplingHook : MonoBehaviour
                 isHookActivate = true;
                 isLineMax = false;
                 hook.gameObject.SetActive(true);
+                GetComponent<Animator>().SetTrigger("is grappling");
+                GetComponent<Animator>().SetBool("is diving", false);
+                SoundManager.instance.PlaySFX("Hook");
             }
         }
 
         if (isHookActivate && !isLineMax && !isAttach)
         {
-            hook.Translate(hookDir * Time.deltaTime * 15);
+            hook.Translate(hookDir * Time.deltaTime * 30);
 
             if (Vector2.Distance(transform.position, hook.position) > 5)
             {
@@ -51,7 +56,7 @@ public class GrapplingHook : MonoBehaviour
         }
         else if (isHookActivate && isLineMax && !isAttach)
         {
-            hook.position = Vector2.MoveTowards(hook.position, transform.position, Time.deltaTime * 20);
+            hook.position = Vector2.MoveTowards(hook.position, transform.position, Time.deltaTime * 30);
             if (Vector2.Distance(transform.position, hook.position) < 0.1f)
             {
                 isHookActivate = false;
@@ -63,11 +68,15 @@ public class GrapplingHook : MonoBehaviour
         {
             if (Input.GetKeyDown(KeyCode.Space))
             {
+                GetComponent<Animator>().SetTrigger("is grapjump");
                 isAttach = false;
                 isHookActivate = false;
                 isLineMax = false;
                 hook.GetComponent<Hooking>().springJoint.enabled = false;
                 hook.gameObject.SetActive(false);
+                PlayerMove.jumpCount = 1;
+                SoundManager.instance.PlaySFX("Hook Jump");
+
             }
         }
     }

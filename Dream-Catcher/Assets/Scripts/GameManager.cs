@@ -64,5 +64,6 @@ public class GameManager : MonoBehaviour
     {
         player.transform.position = new Vector3(0, 1, -1);
         player.VelocityZero();
+        player.summonplatform.summonPlatformCount = 0;
     }
 }

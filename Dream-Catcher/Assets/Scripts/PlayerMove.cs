@@ -2,8 +2,12 @@ using Unity.VisualScripting;
 using UnityEngine;
 using System;
 using JetBrains.Annotations;
+#if UNITY_EDITOR
 using static UnityEditor.Searcher.SearcherWindow.Alignment;
+#endif
+
 using Unity.XR.GoogleVr;
+using System.Collections;
 
 public class PlayerMove : MonoBehaviour
 {
@@ -34,7 +38,6 @@ public class PlayerMove : MonoBehaviour
     public AudioClip clip;
 
     public SummonPlatform summonplatform;
-
     private GrapplingHook grapplingHook;
     Rigidbody2D rigid;
     SpriteRenderer spriteRenderer;
@@ -58,9 +61,6 @@ public class PlayerMove : MonoBehaviour
         RaycastHit2D rayDown = Physics2D.Raycast(rigid.position, Vector3.down, 0.5f, LayerMask.GetMask("Platform"));
         RaycastHit2D rayRight = Physics2D.Raycast(rigid.position, Vector3.right, 0.5f, LayerMask.GetMask("Platform"));
         RaycastHit2D rayLeft = Physics2D.Raycast(rigid.position, Vector3.left, 0.5f, LayerMask.GetMask("Platform"));
-        RaycastHit2D summonRayDown = Physics2D.Raycast(rigid.position, Vector3.down, 0.5f, LayerMask.GetMask("SummonedPlatform"));
-        RaycastHit2D summonRayRight = Physics2D.Raycast(rigid.position, Vector3.right, 0.5f, LayerMask.GetMask("SummonedPlatform"));
-        RaycastHit2D summonRayLeft = Physics2D.Raycast(rigid.position, Vector3.left, 0.5f, LayerMask.GetMask("SummonedPlatform"));
         //jump
         if (Input.GetButtonDown("Jump") && jumpCount < maxJumpCount && !grappling.isAttach)
         {
@@ -80,20 +80,22 @@ public class PlayerMove : MonoBehaviour
             }
 
             // 벽 점프 감지
-            if (rayLeft.collider != null || summonRayLeft.collider != null)
+            if (rayLeft.collider != null )
             {
                 animator.SetBool("is wallkick", true);
                 animator.SetBool("is jumping", false);
                 wallIsRight = -1;
                 afterWallJumpStiff = 20;
+                spriteRenderer.flipX = false;
             }
-            else if (rayRight.collider != null || summonRayRight.collider != null)
+            else if (rayRight.collider != null)
             {
                 animator.SetBool("is wallkick", true);
                 animator.SetBool("is jumping", false);
                 rigid.AddForce(Vector2.left * wallJumpPower, ForceMode2D.Impulse);
                 wallIsRight = 1;
                 afterWallJumpStiff = 20;
+                spriteRenderer.flipX = true;
             }
         }
 
@@ -203,9 +205,6 @@ public class PlayerMove : MonoBehaviour
         RaycastHit2D rayHit = Physics2D.Raycast(rigid.position, Vector2.down, 1f, LayerMask.GetMask("Platform", "Speed", "Jump"));
         RaycastHit2D rayRight = Physics2D.Raycast(rigid.position, Vector2.right, 0.5f, LayerMask.GetMask("Platform", "Speed", "Jump"));
         RaycastHit2D rayLeft = Physics2D.Raycast(rigid.position, Vector2.left, 0.5f, LayerMask.GetMask("Platform", "Speed", "Jump"));
-        RaycastHit2D summonRayHit = Physics2D.Raycast(rigid.position, Vector2.down, 0.5f, LayerMask.GetMask("SummonedPlatform"));
-        RaycastHit2D summonRayRight = Physics2D.Raycast(rigid.position, Vector2.right, 0.5f, LayerMask.GetMask("SummonedPlatform"));
-        RaycastHit2D summonRayLeft = Physics2D.Raycast(rigid.position, Vector2.left, 0.5f, LayerMask.GetMask("SummonedPlatform"));
 
         //move speed
         float h = Input.GetAxisRaw("Horizontal");
@@ -235,15 +234,14 @@ public class PlayerMove : MonoBehaviour
 
 
             }
-            if (rayHit.collider != null || rayRight.collider != null || rayLeft.collider != null || summonRayHit.collider != null || summonRayLeft.collider != null || summonRayRight.collider != null)
+            if (rayHit.collider != null || rayRight.collider != null || rayLeft.collider != null)
             {
                 animator.SetBool("is diving", false);
                 animator.SetBool("is wallkick", false);
                 jumpCount = 0;
                 dashCount = 0;
             }
-            if (rayHit.collider != null || rayRight.collider != null || rayLeft.collider != null)
-                summonplatform.summonPlatformCount = 0;
+            
         }
         if (rayHit.collider == null)
             isOnFloor = 0;
@@ -252,7 +250,7 @@ public class PlayerMove : MonoBehaviour
 
         if (afterWallJumpStiff == 0 && dashTime == 0)
         {
-            if ((rayRight.collider == null && rayLeft.collider == null) || (summonRayRight.collider == null && summonRayLeft.collider == null))
+            if (rayRight.collider == null && rayLeft.collider == null)
             {
                 rigid.AddForce(Vector2.right * h, ForceMode2D.Impulse);
                 animator.SetBool("is climbing", false);
@@ -322,8 +320,20 @@ public class PlayerMove : MonoBehaviour
         if (afterWallJumpStiff == 0)
             wallIsRight = 0;
     }
+    private IEnumerator ReactivateAfterDelay(GameObject obj, float delay)
+    {
+        obj.SetActive(false);
+        yield return new WaitForSeconds(delay);
+        obj.SetActive(true);
+    }
     private void OnTriggerEnter2D(Collider2D collision)
     {
+
+        if (collision.gameObject.CompareTag("Reset"))
+        {
+            summonplatform.summonPlatformCount = 0;
+            StartCoroutine(ReactivateAfterDelay(collision.gameObject, 3f));
+        }
         if (collision.gameObject.tag == "Item")
         {
             //point

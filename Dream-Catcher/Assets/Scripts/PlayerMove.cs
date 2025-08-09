@@ -127,15 +127,17 @@ public class PlayerMove : MonoBehaviour
         }
 
         // flip
-        if (Input.GetKeyDown(KeyCode.LeftArrow))
+        if (afterWallJumpStiff <= 0)
         {
-            spriteRenderer.flipX=true;
+            if (Input.GetKey(KeyCode.LeftArrow))
+            {
+                spriteRenderer.flipX = true;
+            }
+            if (Input.GetKey(KeyCode.RightArrow))
+            {
+                spriteRenderer.flipX = false;
+            }
         }
-        if (Input.GetKeyDown(KeyCode.RightArrow))
-        {
-            spriteRenderer.flipX = false;
-        }
-
         //walk animation
         if (Mathf.Abs(rigid.linearVelocity.x) < 0.7)
             animator.SetBool("is walking", false);
@@ -292,8 +294,11 @@ public class PlayerMove : MonoBehaviour
         {
             speedSoundPlayed = false;
         }
+
         RaycastHit2D SpeedHit = Physics2D.Raycast(rigid.position, Vector2.down, 1f, LayerMask.GetMask("Platform", "Jump"));
-        if (SpeedHit.collider != null && SpeedHit.distance < 0.6f)
+        RaycastHit2D SpeedLHit = Physics2D.Raycast(rigid.position, Vector2.left, 0.5f, LayerMask.GetMask("Platform", "Jump"));
+        RaycastHit2D SpeedRHit = Physics2D.Raycast(rigid.position, Vector2.right, 0.5f, LayerMask.GetMask("Platform", "Jump"));
+        if ((SpeedHit.collider != null && SpeedHit.distance < 0.6f) || (SpeedLHit.collider != null && SpeedLHit.distance < 0.6f) || (SpeedRHit.collider != null && SpeedRHit.distance < 0.6f))
         {
             maxSpeed = 5;
         }

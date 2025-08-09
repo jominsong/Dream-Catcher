@@ -28,7 +28,7 @@ public class GrapplingHook : MonoBehaviour
         line.SetPosition(0, transform.position);
         line.SetPosition(1, hook.position);
 
-        if (Input.GetKeyUp(KeyCode.E) && !isHookActivate)
+        if (Input.GetKeyDown(KeyCode.E) && !isHookActivate)
         {
             targetRing = FindNearestRing();
 
@@ -85,7 +85,6 @@ public class GrapplingHook : MonoBehaviour
         }
     }
 
-    // 가장 가까운 Ring 오브젝트 찾기
     Transform FindNearestRing()
     {
         GameObject[] rings = GameObject.FindGameObjectsWithTag("Ring");

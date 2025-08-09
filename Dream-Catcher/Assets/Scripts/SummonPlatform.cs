@@ -39,6 +39,7 @@ public class SummonPlatform : MonoBehaviour
                 SpriteRenderer sr = newPlatform.GetComponent<SpriteRenderer>();
                 if (sr != null && downSprite != null)
                     sr.sprite = downSprite;
+                SoundManager.instance.PlaySFX("String2");
             }
             else
             {
@@ -48,6 +49,7 @@ public class SummonPlatform : MonoBehaviour
                 SpriteRenderer sr = newPlatform.GetComponent<SpriteRenderer>();
                 if (sr != null && defaultSprite != null)
                     sr.sprite = defaultSprite;
+                SoundManager.instance.PlaySFX("String3");
             }
         }
 

@@ -29,14 +29,16 @@ public class PlayerMove : MonoBehaviour
     public float dashCount;
     public float dashTime;
     public float dashCoolDown;
-    //이단점프 이펙트
+    //double jump effect
     public Transform Double;
     public bool isDoubleActivated = false;
     private bool doubleEffectPlayed = false;
     public float isOnFloor;
-    //사운드 이펙트
+    //sound effect
     public AudioClip clip;
-
+    bool speedSoundPlayed = false;
+    bool jumpSoundPlayed = false;
+    //summonplatform
     public SummonPlatform summonplatform;
     private GrapplingHook grapplingHook;
     Rigidbody2D rigid;
@@ -55,7 +57,17 @@ public class PlayerMove : MonoBehaviour
     }
     void Update()
     {
-        float h = Input.GetAxisRaw("Horizontal");
+        float h = 0f;
+
+        if (Input.GetKey(KeyCode.LeftArrow))
+        {
+            h = -1f;
+        }
+        else if (Input.GetKey(KeyCode.RightArrow))
+        {
+            h = 1f;
+        }
+
         Debug.DrawRay(rigid.position, Vector3.right, new Color(0, 1, 0));
         Debug.DrawRay(rigid.position, Vector3.left, new Color(0, 1, 0));
         RaycastHit2D rayDown = Physics2D.Raycast(rigid.position, Vector3.down, 0.5f, LayerMask.GetMask("Platform"));
@@ -79,7 +91,7 @@ public class PlayerMove : MonoBehaviour
                 SoundManager.instance.PlaySFX("Double Jump");
             }
 
-            // 벽 점프 감지
+            //wall kick
             if (rayLeft.collider != null )
             {
                 animator.SetBool("is wallkick", true);
@@ -99,7 +111,6 @@ public class PlayerMove : MonoBehaviour
             }
         }
 
-        //벽점프&관성
         if (wallIsRight == 1)
         {
             rigid.linearVelocityX = -afterWallJumpStiff;
@@ -115,7 +126,7 @@ public class PlayerMove : MonoBehaviour
             rigid.linearVelocity = new Vector2(rigid.linearVelocity.normalized.x * 1.5f, rigid.linearVelocity.y);
         }
 
-        // 방향 반전: 실제 이동 방향 기준
+        // flip
         if (Input.GetKeyDown(KeyCode.LeftArrow))
         {
             spriteRenderer.flipX=true;
@@ -173,18 +184,16 @@ public class PlayerMove : MonoBehaviour
 
     void FixedUpdate()
     {
-        // 더블점프 이펙트
+        // double jump effect
         if (jumpCount == 2 && !doubleEffectPlayed)
         {
             Double doubleScript = Double.GetComponent<Double>();
             if (doubleScript != null && !doubleScript.isDoubleActivated)
             {
                 doubleScript.Activate();
-                doubleEffectPlayed = true; // 한 번만 실행되게
+                doubleEffectPlayed = true;
             }
         }
-
-        // jumpCount가 초기화되면 다시 false로
         if (jumpCount < 2 && doubleEffectPlayed)
         {
             doubleEffectPlayed = false;
@@ -195,8 +204,8 @@ public class PlayerMove : MonoBehaviour
 
         if (grappling.isAttach)
         {
-                maxSpeed = 9f;
-                rigid.AddForce(Vector2.right * Input.GetAxisRaw("Horizontal") * 10, ForceMode2D.Force);
+            maxSpeed = 9f;
+            rigid.AddForce(Vector2.right * Input.GetAxisRaw("Horizontal") * 10, ForceMode2D.Force);
         }
 
 
@@ -207,24 +216,24 @@ public class PlayerMove : MonoBehaviour
         RaycastHit2D rayLeft = Physics2D.Raycast(rigid.position, Vector2.left, 0.5f, LayerMask.GetMask("Platform", "Speed", "Jump"));
 
         //move speed
-        float h = Input.GetAxisRaw("Horizontal");
-        if (afterWallJumpStiff < 0)
+        float h = 0f;
+
+        if (Input.GetKey(KeyCode.LeftArrow))
         {
-             h = Input.GetAxisRaw("Horizontal");
+            h = -1f;
         }
-        
+        else if (Input.GetKey(KeyCode.RightArrow))
+        {
+            h = 1f;
+        }      
         if (grappling.isAttach)
         {
             rigid.AddForce(Vector2.right * h * 10, ForceMode2D.Force);
         }
 
-            
 
-
-       
-
-        //플렛폼 감지
-        if (rigid.linearVelocity.y < 0)
+        //platform senser
+        if (rigid.linearVelocity.y < 1)
         {
             if (rayHit.collider != null)
             {
@@ -268,36 +277,43 @@ public class PlayerMove : MonoBehaviour
         }
 
         // Super Jump/Speed
+
         RaycastHit2D raySpeed = Physics2D.Raycast(rigid.position, Vector3.down, 1, LayerMask.GetMask("Speed"));
-
-        if (raySpeed.collider != null)
+        if (raySpeed.collider != null && raySpeed.distance < 0.6f)
         {
-            if (raySpeed.distance < 0.6f)
-                maxSpeed = 12;
+            if (!speedSoundPlayed)
+            {
+                SoundManager.instance.PlaySFX("String5");
+                speedSoundPlayed = true;
+            }
+            maxSpeed = 12;
         }
-
+        else
+        {
+            speedSoundPlayed = false;
+        }
         RaycastHit2D SpeedHit = Physics2D.Raycast(rigid.position, Vector2.down, 1f, LayerMask.GetMask("Platform", "Jump"));
         if (SpeedHit.collider != null && SpeedHit.distance < 0.6f)
         {
             maxSpeed = 5;
         }
 
-        if (rigid.linearVelocity.y < 0)
-        {
 
             RaycastHit2D rayJump = Physics2D.Raycast(rigid.position, Vector3.down, 1, LayerMask.GetMask("Jump"));
-
-            if (rayJump.collider != null)
+            if (rayJump.collider != null && rayJump.distance < 0.6f)
             {
-                if (rayJump.distance < 0.6f)
-                    JumpPower = 20;
+                if (!jumpSoundPlayed)
+                {
+                    SoundManager.instance.PlaySFX("String6");
+                    jumpSoundPlayed = true;
+                }
+                JumpPower = 20;
             }
-        }
-        RaycastHit2D JumpHit = Physics2D.Raycast(rigid.position, Vector2.down, 1f, LayerMask.GetMask("Platform", "Speed"));
-        if (JumpHit.collider != null && JumpHit.distance < 0.6f)
-        {
-            JumpPower = 10;
-        }
+            else
+            {
+                jumpSoundPlayed = false;
+                JumpPower = 10;
+            }
 
         if (dashTime == 0)
         {
@@ -355,7 +371,6 @@ public class PlayerMove : MonoBehaviour
                 GameManager.stagePoint += 5000;
                 SoundManager.instance.PlaySFX("Big Gold");
             }
-            //Deactive Item
             collision.gameObject.SetActive(false);
         }
         else if (collision.gameObject.tag == "Finish")
@@ -365,7 +380,7 @@ public class PlayerMove : MonoBehaviour
         }
         else if (collision.gameObject.tag == "Fragment")
         {
-            //Deactive Item
+            SoundManager.instance.PlaySFX("Fragment");
             collision.gameObject.SetActive(false);
             GameManager.dreamPoint += 1;
             if (GameManager.dreamPoint == 5)

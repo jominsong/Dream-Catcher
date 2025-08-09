@@ -41,6 +41,8 @@ public class GrapplingHook : MonoBehaviour
                 hook.gameObject.SetActive(true);
                 GetComponent<Animator>().SetTrigger("is grappling");
                 GetComponent<Animator>().SetBool("is diving", false);
+                GetComponent<Animator>().SetBool("is wallkick", false);
+                GetComponent<Animator>().SetBool("is jumping", true);
                 SoundManager.instance.PlaySFX("String4");
             }
         }
@@ -62,6 +64,7 @@ public class GrapplingHook : MonoBehaviour
                 isHookActivate = false;
                 isLineMax = false;
                 hook.gameObject.SetActive(false);
+                GetComponent<Animator>().SetBool("is jumping", false);
             }
         }
         else if (isAttach)
